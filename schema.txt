@@ -1,0 +1,24 @@
+-------------------------------------------------------------------------------
+|                                                                             |
+|                         HKGI Database Schema                                |
+|                                                                             |
+-------------------------------------------------------------------------------
+
+Plant:
+    *id: UUID
+    kind: enum Kind ("bbc", "hvv", "cyl", "dirt")
+    statuses: String[]
+    xp: Integer
+    xp_multiplier: Float
+    next_yield: UtcDateTime 
+
+
+Stead:
+    *id: UUID
+    username: String
+    password: String
+    plants: UUID[] (Foreign Key -> Plant(id))
+    inventory: JSONB
+    ephemeral_statuses: 
+
+
