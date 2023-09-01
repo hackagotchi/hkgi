@@ -1,8 +1,10 @@
 package routers
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+)
 
-func SetupHkgiRoutes(router fiber.Router) {
+func SetupHkgiRoutes(router fiber.App) {
 	hkgi := router.Group("/hkgi")
 
 	hkgi.Get("/getstead", func(c *fiber.Ctx) error {})
