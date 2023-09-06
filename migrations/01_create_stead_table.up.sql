@@ -6,7 +6,4 @@ CREATE TABLE Stead (
     ephemeral_statuses TEXT[]
 );
 
-CREATE TABLE stead_plant (
-    stead INTEGER references stead(id),
-    plant INTEGER references plant(id)
-);
+

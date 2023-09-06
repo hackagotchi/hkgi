@@ -3,7 +3,8 @@ package main
 import (
 	"log"
 
-	"git.devcara.com/hkgi/database"
+	"git.sr.ht/~muirrum/hkgi/database"
+	"git.sr.ht/~muirrum/hkgi/internal"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 )
@@ -14,6 +15,8 @@ func main() {
 		log.Fatal(err)
 	}
 	app := fiber.New()
+
+	internal.SetupRoutes(app)
 
 	database.ConnectDB()
 
