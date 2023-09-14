@@ -6,6 +6,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.49.0
 	github.com/golang-migrate/migrate/v4 v4.16.2
 	github.com/jackc/pgx/v5 v5.3.1
+	github.com/jmoiron/sqlx v1.3.5
 	github.com/joho/godotenv v1.5.1
 	golang.org/x/crypto v0.12.0
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2

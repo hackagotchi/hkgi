@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -52,22 +52,16 @@ func xpPerYield(xp int) int {
 }
 
 func GetStead(c *fiber.Ctx) error {
-	db, err := database.DB.Acquire(context.Background())
-
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
+	db := database.DB
 
 	user := c.Locals("username")
 
-	var inventory fiber.Map
-	var ephemeral_statuses pgtype.Array[string]
+	var inventory json.RawMessage
+	var ephemeral_statuses []string
 
-	err = db.QueryRow(context.Background(), "SELECT inventory, ephemeral_statuses FROM stead WHERE username=$1", user).Scan(&inventory, &ephemeral_statuses)
+	err := db.QueryRowx("SELECT inventory, ephemeral_statuses FROM stead WHERE username=$1", user).Scan(&inventory, &ephemeral_statuses)
 
 	if err != nil {
-		log.Fatal(err)
 		return err
 	}
 	log.Println("Retrieved inventory and statuses!")
@@ -75,16 +69,14 @@ func GetStead(c *fiber.Ctx) error {
 	// Now we have the inventory and any statuses, let's get the plants!
 
 	var userId int
-	err = db.QueryRow(context.Background(), "SELECT id FROM stead WHERE username=$1", user).Scan(&userId)
+	err = db.QueryRowx("SELECT id FROM stead WHERE username=$1", user).Scan(&userId)
 	if err != nil {
-		log.Fatal(err.Error())
 		return err
 	}
 	log.Println("Got the user id")
-	rows, err := db.Query(context.Background(), "SELECT kind, xp, xp_multiplier, next_yield FROM plant WHERE stead_owner=$1", userId)
+	rows, err := db.Query("SELECT xp, xp_multiplier, next_yield FROM plant WHERE stead_owner=$1", userId)
 
 	if err != nil {
-		log.Fatal(err.Error())
 		return nil
 	}
 	log.Println("Got a list of plants")
@@ -94,12 +86,11 @@ func GetStead(c *fiber.Ctx) error {
 	for rows.Next() {
 		var p SerializedPlant
 		var xp int
-		var kind string
+		//		var kind pgtype.Text
 		var next_yield time.Time
 		var xp_multiplier float32
-		err = rows.Scan(kind, xp, xp_multiplier, next_yield)
+		err = rows.Scan(xp, xp_multiplier, next_yield)
 		if err != nil {
-			log.Fatalln(err)
 			return err
 		}
 

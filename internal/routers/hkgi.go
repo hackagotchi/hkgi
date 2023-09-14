@@ -1,7 +1,6 @@
 package routers
 
 import (
-	"context"
 	"log"
 
 	"git.sr.ht/~muirrum/hkgi/database"
@@ -15,19 +14,15 @@ func SetupHkgiRoutes(hkgi fiber.Router) {
 	log.Println("Initializing the HKGI routes")
 	hkgi.Use(basicauth.New(basicauth.Config{
 		Authorizer: func(username, password string) bool {
-			db, err := database.DB.Acquire(context.Background())
-
-			if err != nil {
-				log.Fatal(err.Error())
-			}
+			db := database.DB
 
 			var user string
 			var pass string
-			err = db.QueryRow(context.Background(), "SELECT username, password FROM stead WHERE username=$1", username).Scan(&user, &pass)
+			err := db.QueryRowx("SELECT username, password FROM stead WHERE username=$1", username).Scan(&user, &pass)
 			log.Println("Got the user (or an error!)")
 
 			if err != nil {
-				log.Fatal(err.Error())
+				log.Println("Error: %s", err)
 				return false
 			}
 
@@ -37,6 +32,7 @@ func SetupHkgiRoutes(hkgi fiber.Router) {
 			if err == nil {
 				return true
 			}
+			log.Println("Error: %s", err)
 
 			return false
 		},

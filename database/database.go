@@ -3,23 +3,23 @@
 package database
 
 import (
-	"context"
 	"log"
 	"os"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
-var DB *pgxpool.Pool
+var DB *sqlx.DB
 
 func ConnectDB() {
 	url := os.Getenv("POSTGRES_URL")
 	var err error
 
-	DB, err = pgxpool.New(context.Background(), url)
+	DB, err = sqlx.Connect("postgres", url)
 
 	if err != nil {
 		log.Fatal(err)
