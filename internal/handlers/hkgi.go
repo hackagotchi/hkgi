@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"git.sr.ht/~muirrum/hkgi/database"
-	"git.sr.ht/~muirrum/hkgi/internal/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -87,7 +86,7 @@ func GetStead(c *fiber.Ctx) error {
 	for rows.Next() {
 		var p SerializedPlant
 		var xp int
-		var kind models.PlantKind
+		var kind string
 		var next_yield time.Time
 		var xp_multiplier float32
 		err = rows.Scan(&kind, &xp, &xp_multiplier, &next_yield)

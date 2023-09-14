@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"log"
 
 	"git.sr.ht/~muirrum/hkgi/database"
@@ -30,7 +31,7 @@ func Signup(c *fiber.Ctx) error {
 		return fiber.NewError(400, "User already exists!")
 	} else {
 		// Let's make a new hackstead!
-		starting_inventory := fiber.Map{
+		starting_inventory := map[string]interface{}{
 			"nest_egg": 1,
 			"bbc_seed": 1,
 			"hvv_seed": 1,
@@ -42,18 +43,33 @@ func Signup(c *fiber.Ctx) error {
 			log.Fatal(err)
 			return err
 		}
-		var steadId int
+		var steadId int64
 		tx, err := db.Begin()
 		if err != nil {
 			log.Println(err)
 			return err
 		}
 		log.Println("Creating new stead...")
-		err = tx.QueryRow("INSERT INTO stead (username, password, inventory) VALUES ($1, $2, $3) RETURNING id", u.Username, pw_hash, starting_inventory).Scan(&steadId)
+		inv, _ := json.Marshal(starting_inventory)
+		log.Printf("Username: %s", u.Username)
+		_, err = tx.Exec("INSERT INTO stead (username, password, inventory) VALUES ($1, $2, $3)", u.Username, pw_hash, inv)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
 		log.Println("Created a new stead for user" + u.Username)
+		tx.Commit()
+
+		tx, err = db.Begin()
+
+		err = db.QueryRowx("SELECT id FROM stead WHERE username=$1", u.Username).Scan(&steadId)
 
 		// Create a plant first
 		_, err = tx.Exec("INSERT INTO plant (stead_owner, kind, xp, xp_multiplier) VALUES ($1, 'dirt', 0, 0)", steadId)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
 		log.Printf("Created a new patch of dirt\n")
 		tx.Commit()
 
