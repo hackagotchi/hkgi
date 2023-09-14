@@ -1,0 +1,14 @@
+image: debian/unstable
+packages: 
+  - golang
+  - postgresql
+sources:
+  - https://git.sr.ht/~muirrum/hkgi
+triggers:
+  - action: email
+    condition: always
+    to: Cara Salter <cara@devcara.com>
+tasks:
+  - build: |
+      cd hkgi
+      go build
