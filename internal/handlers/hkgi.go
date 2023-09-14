@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"git.sr.ht/~muirrum/hkgi/database"
+	"git.sr.ht/~muirrum/hkgi/internal/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -57,9 +58,9 @@ func GetStead(c *fiber.Ctx) error {
 	user := c.Locals("username")
 
 	var inventory json.RawMessage
-	var ephemeral_statuses []string
+	var ephemeral_statuses []uint8
 
-	err := db.QueryRowx("SELECT inventory, ephemeral_statuses FROM stead WHERE username=$1", user).Scan(&inventory, &ephemeral_statuses)
+	err := db.QueryRowx("SELECT inventory, (CASE WHEN ephemeral_statuses IS NULL THEN '{\"\"}' ELSE ephemeral_statuses END) as ephemeral_statuses FROM stead WHERE username=$1", user).Scan(&inventory, &ephemeral_statuses)
 
 	if err != nil {
 		return err
@@ -74,7 +75,7 @@ func GetStead(c *fiber.Ctx) error {
 		return err
 	}
 	log.Println("Got the user id")
-	rows, err := db.Query("SELECT xp, xp_multiplier, next_yield FROM plant WHERE stead_owner=$1", userId)
+	rows, err := db.Query("SELECT kind, xp, xp_multiplier, (CASE WHEN next_yield IS NULL THEN '1970-01-01 00:00:00' ELSE next_yield END) as next_yield FROM plant WHERE stead_owner=$1", userId)
 
 	if err != nil {
 		return nil
@@ -86,10 +87,10 @@ func GetStead(c *fiber.Ctx) error {
 	for rows.Next() {
 		var p SerializedPlant
 		var xp int
-		//		var kind pgtype.Text
+		var kind models.PlantKind
 		var next_yield time.Time
 		var xp_multiplier float32
-		err = rows.Scan(xp, xp_multiplier, next_yield)
+		err = rows.Scan(&kind, &xp, &xp_multiplier, &next_yield)
 		if err != nil {
 			return err
 		}
