@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
 	"time"
 
 	"git.sr.ht/~muirrum/hkgi/database"
@@ -124,4 +125,42 @@ func GetStead(c *fiber.Ctx) error {
 		"plants": plants,
 	})
 
+}
+
+func Users(c *fiber.Ctx) error {
+	db := database.DB
+
+	rows, err := db.Queryx("SELECT username FROM stead")
+	if err != nil {
+		return err
+	}
+
+	var res []string
+
+	for rows.Next() {
+		var username string
+		err = rows.Scan(&username)
+		if err != nil {
+			return err
+		}
+
+		res = append(res, username)
+	}
+	return c.JSON(res)
+}
+
+func Manifest(c *fiber.Ctx) error {
+
+	content, err := os.ReadFile("data/manifest.json")
+	if err != nil {
+		return err
+	}
+
+	var payload map[string]interface{}
+	err = json.Unmarshal(content, &payload)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(payload)
 }

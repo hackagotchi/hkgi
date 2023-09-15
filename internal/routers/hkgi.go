@@ -45,9 +45,9 @@ func SetupHkgiRoutes(hkgi fiber.Router) {
 
 	hkgi.Get("/activity", func(c *fiber.Ctx) error { return nil })
 
-	hkgi.Get("/users", func(c *fiber.Ctx) error { return nil })
+	hkgi.Get("/users", handlers.Users)
 
-	hkgi.Get("/manifest", func(c *fiber.Ctx) error { return nil })
+	hkgi.Get("/manifest", handlers.Manifest)
 
 	// POST
 	hkgi.Post("/useitem", func(c *fiber.Ctx) error { return nil })
