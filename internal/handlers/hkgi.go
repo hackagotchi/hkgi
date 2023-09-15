@@ -5,10 +5,14 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"os"
+	"math/rand"
+	"strings"
 	"time"
 
 	"git.sr.ht/~muirrum/hkgi/database"
+	"git.sr.ht/~muirrum/hkgi/internal/game"
+	"git.sr.ht/~muirrum/hkgi/internal/models"
+	"git.sr.ht/~muirrum/hkgi/internal/state"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -150,17 +154,118 @@ func Users(c *fiber.Ctx) error {
 }
 
 func Manifest(c *fiber.Ctx) error {
+	return c.JSON(state.GlobalState.Manifest)
+}
 
-	content, err := os.ReadFile("data/manifest.json")
+func Activity(c *fiber.Ctx) error {
+	return c.JSON(state.GlobalState.Activity)
+}
+
+// POST
+func UseItem(c *fiber.Ctx) error {
+	val := &XValidator{
+		validator: validate,
+	}
+
+	var item models.UseItem
+	if err := c.BodyParser(item); err != nil {
+		return err
+	}
+	if errs := val.Validate(item); len(errs) > 0 && errs[0].Error {
+		errMsgs := make([]string, 0)
+
+		for _, err := range errs {
+			errMsgs = append(errMsgs, fmt.Sprintf(
+				"[%s]: '%v' | Needs to implement '%s'",
+				err.FailedField,
+				err.Value,
+				err.Tag,
+			))
+		}
+
+		return &fiber.Error{
+			Code:    fiber.ErrBadRequest.Code,
+			Message: strings.Join(errMsgs, " and "),
+		}
+	}
+
+	manifest := state.GlobalState.Manifest
+
+	if manifest[item.Item] == nil {
+		return &fiber.Error{
+			Code:    fiber.ErrBadRequest.Code,
+			Message: "no such item found",
+		}
+	}
+
+	if !manifest[item.Item].(map[string]interface{})["usable"].(bool) {
+		return &fiber.Error{
+			Code:    fiber.ErrBadRequest.Code,
+			Message: "that's not an item you can use!",
+		}
+	}
+
+	err := game.TakeItem(c.Locals("username").(string), map[string]interface{}{
+		item.Item: 1,
+	})
+
 	if err != nil {
 		return err
 	}
 
-	var payload map[string]interface{}
-	err = json.Unmarshal(content, &payload)
-	if err != nil {
-		return err
+	log.Printf("%s is using item %s", c.Locals("username"), item.Item)
+	state.GlobalState.ActivityPush("useitem", map[string]interface{}{
+		"who":  c.Locals("username"),
+		"what": item.Item,
+	})
+
+	u := c.Locals("username").(string)
+	i := item.Item
+
+	// Item recipes!
+	if i == "bag_egg_t1" {
+		game.GiveItem(u, game.ScaleDrop(game.MegaboxDrop(), 0.2))
+	}
+	if i == "bag_egg_t2" {
+		game.GiveItem(u, game.ScaleDrop(game.MegaboxDrop(), 0.6))
+	}
+	if i == "bag_egg_t3" {
+		game.GiveItem(u, game.MegaboxDrop())
 	}
 
-	return c.JSON(payload)
+	if i == "bbc_egg" || i == "hvv_egg" || i == "cyl_egg" {
+		inverted_types := map[string]interface{}{
+			"bbc_egg": []string{"hvv_item", "cyl_item"},
+			"hvv_egg": []string{"bbc_item", "cyl_item"},
+			"cyl_egg": []string{"bbc_item", "hvv_item"},
+		}
+
+		var reward map[string]interface{}
+		r := rand.Float64()
+
+		if r < 0.1 {
+			reward = map[string]interface{}{"land_deed": 1}
+		} else if r < 0.5 {
+			reward = map[string]interface{}{
+				game.Choose[string](inverted_types[i].([]string)): 1,
+			}
+		} else if r < 0.55 {
+			reward = map[string]interface{}{"powder_t1": 1}
+		} else {
+			reward = map[string]interface{}{"powder_t2": 1}
+		}
+
+		game.GiveItem(u, reward)
+	}
+
+	if i == "land_deed" {
+		game.NewPlant(u, "dirt")
+	}
+
+	return c.JSON(fiber.Map{"ok": true})
+}
+
+func Craft(c *fiber.Ctx) error {
+
+	return nil
 }

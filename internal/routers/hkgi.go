@@ -43,14 +43,14 @@ func SetupHkgiRoutes(hkgi fiber.Router) {
 
 	hkgi.Get("/getstead", handlers.GetStead)
 
-	hkgi.Get("/activity", func(c *fiber.Ctx) error { return nil })
+	hkgi.Get("/activity", handlers.Activity)
 
 	hkgi.Get("/users", handlers.Users)
 
 	hkgi.Get("/manifest", handlers.Manifest)
 
 	// POST
-	hkgi.Post("/useitem", func(c *fiber.Ctx) error { return nil })
+	hkgi.Post("/useitem", handlers.UseItem)
 
 	hkgi.Post("/craft", func(c *fiber.Ctx) error { return nil })
 

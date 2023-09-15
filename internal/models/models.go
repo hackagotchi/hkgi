@@ -1,8 +1,12 @@
 package models
 
 type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
+type UseItem struct {
+	Item string `json:"item" validate:"required"`
 }
 
 type Plant struct {
@@ -10,6 +14,14 @@ type Plant struct {
 	Xp           int     `json:"xp"`
 	XpMultiplier float32 `json:"xp_multiplier"`
 	NextYield    float32 `json:"tt_yield"`
+}
+
+type Stead struct {
+	Id                 int
+	Username           string
+	Password           string
+	Inventory          map[string]interface{}
+	ephemeral_statuses []string
 }
 
 type PlantKind string
