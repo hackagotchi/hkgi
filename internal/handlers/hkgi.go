@@ -266,6 +266,91 @@ func UseItem(c *fiber.Ctx) error {
 }
 
 func Craft(c *fiber.Ctx) error {
+	val := &XValidator{
+		validator: validate,
+	}
+
+	var cReq models.Craft
+	if err := c.BodyParser(cReq); err != nil {
+		return err
+	}
+
+	if errs := val.Validate(cReq); len(errs) > 0 && errs[0].Error {
+		errMsgs := make([]string, 0)
+
+		for _, err := range errs {
+			errMsgs = append(errMsgs, fmt.Sprintf(
+				"[%s]: '%v' | Needs to implement '%s'",
+				err.FailedField,
+				err.Value,
+				err.Tag,
+			))
+		}
+
+		return &fiber.Error{
+			Code:    fiber.ErrBadRequest.Code,
+			Message: strings.Join(errMsgs, " and "),
+		}
+	}
+
+	db := database.DB
+	manifest := state.GlobalState.Manifest
+	u := c.Locals("username").(string)
+
+	var p models.Plant
+	err := db.Get(&p, "SELECT * FROM plant WHERE stead_owner=(SELECT id FROM stead WHERE username=$1) AND id=$2", u, cReq.PlantId)
+	if err != nil {
+		return err
+	}
+
+	recipe := manifest["plant_recipes"].(map[string]interface{})[p.Kind].([]map[string]interface{})[cReq.RecipeIndex]
+
+	if !(lvlfromxp(p.Xp) == recipe["xp"].(int)) {
+		return &fiber.Error{
+			Code:    fiber.ErrBadRequest.Code,
+			Message: "come back when you're older, plant!",
+		}
+	}
+
+	if err = game.TakeItem(u, recipe["needs"].(map[string]interface{})); err != nil {
+		return &fiber.Error{
+			Code:    fiber.ErrBadRequest.Code,
+			Message: "you can't afford that!",
+		}
+	}
+
+	state.GlobalState.ActivityPush("craft", map[string]interface{}{
+		"who": u,
+		"what": map[string]interface{}{
+			"recipe_index": cReq.RecipeIndex,
+			"plant_id":     cReq.PlantId,
+		},
+	})
+
+	if recipe["change_plant_to"] != nil {
+		tx, err := db.Begin()
+		if err != nil {
+			return err
+		}
+		_, err = tx.Exec("UPDATE plant SET kind=$2, xp=0 WHERE id=$1", cReq.PlantId, recipe["change_plant_to"].(string))
+		if err != nil {
+			tx.Rollback()
+			game.GiveItem(u, recipe["needs"].(map[string]interface{}))
+			return err
+		}
+		tx.Commit()
+	}
+
+	if recipe["make_item"] != nil {
+		switch recipe["make_item"].(type) {
+		case string:
+			game.GiveItem(u, map[string]interface{}{
+				recipe["make_item"].(string): 1,
+			})
+		default:
+			one_of := recipe["make_item"].([]
+		}
+	}
 
 	return nil
 }
