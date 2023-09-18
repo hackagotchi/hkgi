@@ -348,7 +348,20 @@ func Craft(c *fiber.Ctx) error {
 				recipe["make_item"].(string): 1,
 			})
 		default:
-			one_of := recipe["make_item"].([]
+			one_of := recipe["make_item"].(map[string]interface{})["one_of"].([][]any)
+			r := rand.Float64()
+			i := 0
+			var item string
+			for next := true; next; next = r > 0 && i < len(one_of) {
+				pair := one_of[i]
+				chance := pair[0].(float64)
+				item = pair[1].(string)
+				r -= chance
+			}
+
+			game.GiveItem(u, map[string]interface{}{
+				item: 1,
+			})
 		}
 	}
 
