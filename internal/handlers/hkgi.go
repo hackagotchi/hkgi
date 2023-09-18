@@ -14,11 +14,10 @@ import (
 	"git.sr.ht/~muirrum/hkgi/internal/models"
 	"git.sr.ht/~muirrum/hkgi/internal/state"
 	"github.com/gofiber/fiber/v2"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type SerializedPlant struct {
-	Kind      pgtype.Text
+	Kind      string
 	Lvl       int
 	TtYield   float32
 	YieldProg float32
