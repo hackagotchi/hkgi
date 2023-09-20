@@ -6,6 +6,7 @@ import (
 
 	"git.sr.ht/~muirrum/hkgi/database"
 	"git.sr.ht/~muirrum/hkgi/internal"
+	"git.sr.ht/~muirrum/hkgi/internal/game"
 	"git.sr.ht/~muirrum/hkgi/internal/state"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
@@ -44,6 +45,8 @@ func main() {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.JSON(&fiber.Map{"data": "Hello from Fiber!"})
 	})
+
+	go game.RunTick()
 
 	app.Listen(":6000")
 }

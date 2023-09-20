@@ -26,7 +26,7 @@ type Stead struct {
 	Username           string
 	Password           string
 	Inventory          map[string]interface{}
-	ephemeral_statuses []string
+	Ephemeral_statuses map[string]interface{}
 }
 
 type PlantKind string

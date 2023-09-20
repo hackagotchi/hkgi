@@ -4,8 +4,10 @@ import (
 	"errors"
 	"math"
 	"math/rand"
+	"time"
 
 	"git.sr.ht/~muirrum/hkgi/database"
+	"git.sr.ht/~muirrum/hkgi/internal/models"
 )
 
 func NewPlant(username string, plant_kind string) error {
@@ -115,4 +117,48 @@ func MegaboxDrop() map[string]interface{} {
 		"powder_t2": Choose[int]([]int{3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 8}),
 		"powder_t3": Choose[int]([]int{0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 3}),
 	}
+}
+
+const SECONDS_PER_TICK = 0.5
+
+func RunTick() error {
+	db := database.DB
+
+	for {
+		var users []models.Stead
+		err := db.Select(&users, "SELECT * FROM stead")
+		if err != nil {
+			return err
+		}
+
+		for _, u := range users {
+			for k, v := range u.Ephemeral_statuses {
+				status := v.(map[string]interface{})
+				tt_expire := status["tt_expire"].(string)
+				time_expire, _ := time.Parse(time.UnixDate, tt_expire)
+				if time_expire.Before(time.Now()) {
+					u.Ephemeral_statuses[k] = nil
+				}
+			}
+
+			var plants []models.Plant
+			err = db.Select(&plants, "SELECT * FROM plant WHERE stead_owner=$1", u.Id)
+			if err != nil {
+				return err
+			}
+
+			tx, err := db.Begin()
+			if err != nil {
+				return err
+			}
+			for _, p := range plants {
+				if p.Kind == "dirt" {
+					continue
+				}
+			}
+
+		}
+	}
+
+	return nil
 }
