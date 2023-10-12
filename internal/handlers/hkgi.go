@@ -25,34 +25,16 @@ type SerializedPlant struct {
 	LvlupProg float32
 }
 
-func lvlfromxp(xp int) int {
-	// get log_1.3...
-	log_13 := math.Log(1.3)
-	lvl := int(math.Log(float64(xp)/10) / log_13)
-	if lvl < 0 {
-		lvl = 0
-	}
-	return lvl
-}
-
 func getLevelCost(lvl int) int {
 	return int(math.Floor(10 * math.Pow(1.3, float64(lvl+1))))
 }
 
 func getXpRemaining(xp int) int {
-	lvl := lvlfromxp(xp)
+	lvl := game.LvlFromXp(xp)
 
 	cost := getLevelCost(lvl + 1)
 
 	return int(math.Round(float64(cost) - float64(xp)))
-}
-
-func xpPerYield(xp int) int {
-	level := lvlfromxp(xp)
-
-	// magic numbers!!
-
-	return int(math.Floor(900 * (1 - float64(level)/27)))
 }
 
 func GetStead(c *fiber.Ctx) error {
@@ -100,16 +82,16 @@ func GetStead(c *fiber.Ctx) error {
 
 		if xp > 10 {
 
-			xppy := xpPerYield(xp)
+			xppy := game.XpPerYield(xp)
 			xp_to_go := getXpRemaining(xp)
 
 			// MAGIC: 10 XP/sec
 			p.TtYield = (float32(xppy) - float32(xp%xppy)) / 10 * 1000 / xp_multiplier
 			p.YieldProg = float32(xp%xppy) / float32(xppy)
 			p.TtLevelUp = float32(xp_to_go) / 10 * 1000 / xp_multiplier
-			p.LvlupProg = float32(xp_to_go) / float32(getLevelCost(lvlfromxp(xp)+1))
+			p.LvlupProg = float32(xp_to_go) / float32(getLevelCost(game.LvlFromXp(xp)+1))
 
-			p.Lvl = lvlfromxp(xp)
+			p.Lvl = game.LvlFromXp(xp)
 		} else {
 			p.TtYield = math.MaxInt
 			p.YieldProg = 0
@@ -304,7 +286,7 @@ func Craft(c *fiber.Ctx) error {
 
 	recipe := manifest["plant_recipes"].(map[string]interface{})[p.Kind].([]map[string]interface{})[cReq.RecipeIndex]
 
-	if !(lvlfromxp(p.Xp) == recipe["xp"].(int)) {
+	if !(game.LvlFromXp(p.Xp) == recipe["xp"].(int)) {
 		return &fiber.Error{
 			Code:    fiber.ErrBadRequest.Code,
 			Message: "come back when you're older, plant!",

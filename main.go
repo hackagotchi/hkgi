@@ -46,7 +46,12 @@ func main() {
 		return c.JSON(&fiber.Map{"data": "Hello from Fiber!"})
 	})
 
-	go game.RunTick()
+	go func() {
+		err := game.RunTick()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	app.Listen(":6000")
 }

@@ -15,6 +15,7 @@ type Craft struct {
 }
 
 type Plant struct {
+	Id           int     `json:"id"`
 	Kind         string  `json:"kind"`
 	Xp           int     `json:"xp"`
 	XpMultiplier float32 `json:"xp_multiplier"`

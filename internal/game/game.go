@@ -2,6 +2,9 @@ package game
 
 import (
 	"errors"
+	"fmt"
+	"github.com/gofiber/fiber/v2/log"
+	"github.com/hackagotchi/hkgi/internal/state"
 	"math"
 	"math/rand"
 	"time"
@@ -119,6 +122,24 @@ func MegaboxDrop() map[string]interface{} {
 	}
 }
 
+func LvlFromXp(xp int) int {
+	// get log_1.3...
+	log_13 := math.Log(1.3)
+	lvl := int(math.Log(float64(xp)/10) / log_13)
+	if lvl < 0 {
+		lvl = 0
+	}
+	return lvl
+}
+
+func XpPerYield(xp int) int {
+	level := LvlFromXp(xp)
+
+	// magic numbers!!
+
+	return int(math.Floor(900 * (1 - float64(level)/27)))
+}
+
 const SECONDS_PER_TICK = 0.5
 
 func RunTick() error {
@@ -128,7 +149,8 @@ func RunTick() error {
 		var users []models.Stead
 		err := db.Select(&users, "SELECT * FROM stead")
 		if err != nil {
-			return err
+			log.Error(err)
+			continue
 		}
 
 		for _, u := range users {
@@ -144,21 +166,70 @@ func RunTick() error {
 			var plants []models.Plant
 			err = db.Select(&plants, "SELECT * FROM plant WHERE stead_owner=$1", u.Id)
 			if err != nil {
-				return err
+				log.Error(err)
+				continue
 			}
 
 			tx, err := db.Begin()
 			if err != nil {
-				return err
+				log.Error(err)
+				continue
 			}
 			for _, p := range plants {
 				if p.Kind == "dirt" {
 					continue
 				}
+				mult := plant_multiplier(p, u)
+
+				for mult > 0 {
+					in_mult := math.Min(mult, 1.0)
+					xp_per_tick := SECONDS_PER_TICK * 10 // 10 = XP per tick
+					xppy := XpPerYield(p.Xp)
+
+					p.Xp += int(xp_per_tick * in_mult)
+					xp_since_yield := p.Xp % xppy
+					if float64(xp_since_yield) <= xp_per_tick {
+						err := GiveItem(u.Username, map[string]interface{}{fmt.Sprintf("%s_essence", p.Kind): 1})
+						if err != nil {
+							log.Error(err)
+						}
+
+						if rand.Float64() < 0.004 {
+							lvl := LvlFromXp(p.Xp)
+							if lvl > 5 {
+								err := GiveItem(u.Username, map[string]interface{}{fmt.Sprintf("%s_bag_t1", p.Kind): 1})
+								if err != nil {
+									log.Error(err)
+								}
+							}
+						}
+					}
+
+				}
+				_, err := tx.Exec("UPDATE plant SET xp=$2 WHERE id=$1", p.Xp, p.Id)
+				if err != nil {
+					log.Error(err)
+					tx.Rollback()
+					break
+				}
 			}
+			tx.Commit()
 
 		}
+		state.GlobalState.ActivityPrune()
+
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	return nil
+}
+
+func plant_multiplier(p models.Plant, s models.Stead) float64 {
+	base_mult := 1.0
+	for _, status := range s.Ephemeral_statuses["statuses"].([]map[string]interface{}) {
+		if status["kind"].(string) == p.Kind {
+			base_mult += status["xp_multiplier"].(float64)
+		}
+	}
+	return base_mult
 }
