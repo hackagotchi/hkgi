@@ -6,8 +6,8 @@ import (
 	"math/rand"
 	"time"
 
-	"git.sr.ht/~muirrum/hkgi/database"
-	"git.sr.ht/~muirrum/hkgi/internal/models"
+	"github.com/hackagotchi/hkgi/database"
+	"github.com/hackagotchi/hkgi/internal/models"
 )
 
 func NewPlant(username string, plant_kind string) error {

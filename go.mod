@@ -1,4 +1,4 @@
-module git.sr.ht/~muirrum/hkgi
+module github.com/hackagotchi/hkgi
 
 go 1.21.0
 
@@ -6,7 +6,6 @@ require (
 	github.com/go-playground/validator/v10 v10.15.4
 	github.com/gofiber/fiber/v2 v2.49.0
 	github.com/golang-migrate/migrate/v4 v4.16.2
-	github.com/jackc/pgx/v5 v5.3.1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.2

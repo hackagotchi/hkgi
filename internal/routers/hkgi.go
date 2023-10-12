@@ -3,10 +3,10 @@ package routers
 import (
 	"log"
 
-	"git.sr.ht/~muirrum/hkgi/database"
-	"git.sr.ht/~muirrum/hkgi/internal/handlers"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/basicauth"
+	"github.com/hackagotchi/hkgi/database"
+	"github.com/hackagotchi/hkgi/internal/handlers"
 	"golang.org/x/crypto/bcrypt"
 )
 

@@ -4,11 +4,11 @@ import (
 	"errors"
 	"log"
 
-	"git.sr.ht/~muirrum/hkgi/database"
-	"git.sr.ht/~muirrum/hkgi/internal"
-	"git.sr.ht/~muirrum/hkgi/internal/game"
-	"git.sr.ht/~muirrum/hkgi/internal/state"
 	"github.com/gofiber/fiber/v2"
+	"github.com/hackagotchi/hkgi/database"
+	"github.com/hackagotchi/hkgi/internal"
+	"github.com/hackagotchi/hkgi/internal/game"
+	"github.com/hackagotchi/hkgi/internal/state"
 	"github.com/joho/godotenv"
 )
 

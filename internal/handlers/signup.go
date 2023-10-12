@@ -6,10 +6,10 @@ import (
 	"log"
 	"strings"
 
-	"git.sr.ht/~muirrum/hkgi/database"
-	"git.sr.ht/~muirrum/hkgi/internal/models"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/hackagotchi/hkgi/database"
+	"github.com/hackagotchi/hkgi/internal/models"
 	"golang.org/x/crypto/bcrypt"
 )
 

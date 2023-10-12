@@ -1,10 +1,10 @@
 package internal
 
 import (
-	"git.sr.ht/~muirrum/hkgi/internal/handlers"
-	"git.sr.ht/~muirrum/hkgi/internal/routers"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/hackagotchi/hkgi/internal/handlers"
+	"github.com/hackagotchi/hkgi/internal/routers"
 )
 
 func SetupRoutes(app *fiber.App) {
