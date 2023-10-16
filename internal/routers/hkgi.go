@@ -52,7 +52,7 @@ func SetupHkgiRoutes(hkgi fiber.Router) {
 	// POST
 	hkgi.Post("/useitem", handlers.UseItem)
 
-	hkgi.Post("/craft", func(c *fiber.Ctx) error { return nil })
+	hkgi.Post("/craft", handlers.Craft)
 
 	hkgi.Post("/gib", handlers.Gib)
 
