@@ -346,5 +346,77 @@ func Craft(c *fiber.Ctx) error {
 		}
 	}
 
-	return nil
+	return c.JSON(&fiber.Map{"ok": true})
+}
+
+func Gib(c *fiber.Ctx) error {
+	val := &XValidator{
+		validator: validate,
+	}
+
+	var gib models.GibItem
+	if err := c.BodyParser(gib); err != nil {
+		return err
+	}
+
+	if errs := val.Validate(gib); len(errs) > 0 && errs[0].Error {
+		errMsgs := make([]string, 0)
+
+		for _, err := range errs {
+			errMsgs = append(errMsgs, fmt.Sprintf(
+				"[%s]: '%v' | Needs to implement '%s'",
+				err.FailedField,
+				err.Value,
+				err.Tag,
+			))
+		}
+
+		return &fiber.Error{
+			Code:    fiber.ErrBadRequest.Code,
+			Message: strings.Join(errMsgs, " and "),
+		}
+	}
+
+	db := database.DB
+	_, err := db.Query("SELECT FROM stead WHERE username=$1", gib.To)
+	if err != nil {
+		return &fiber.Error{
+			Code:    fiber.StatusNotFound,
+			Message: "who dat?",
+		}
+	}
+
+	needs := map[string]interface{}{
+		gib.Item: gib.Amount,
+	}
+
+	err = game.TakeItem(c.Locals("username").(string), needs)
+
+	if err != nil {
+		log.Println(err)
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "you can't afford that!",
+		}
+	}
+
+	err = game.GiveItem(gib.To, needs)
+
+	if err != nil {
+		log.Println(err)
+		game.GiveItem(c.Locals("username").(string), needs)
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: "couldn't gib, have refund",
+		}
+	}
+
+	state.GlobalState.ActivityPush("gib", map[string]interface{}{
+		"to":     gib.To,
+		"from":   c.Locals("username").(string),
+		"item":   gib.Item,
+		"amount": gib.Amount,
+	})
+
+	return c.JSON(&fiber.Map{"ok": true})
 }

@@ -9,6 +9,12 @@ type UseItem struct {
 	Item string `json:"item" validate:"required"`
 }
 
+type GibItem struct {
+	To     string `json:"username" validate:"required"`
+	Item   string `json:"item" validate:"required"`
+	Amount int    `json:"amount" validate:"required"`
+}
+
 type Craft struct {
 	PlantId     int `json:"plant_id" validate:"required"`
 	RecipeIndex int `json:"recipe_index" validate:"required"`

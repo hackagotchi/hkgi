@@ -54,4 +54,6 @@ func SetupHkgiRoutes(hkgi fiber.Router) {
 
 	hkgi.Post("/craft", func(c *fiber.Ctx) error { return nil })
 
+	hkgi.Post("/gib", handlers.Gib)
+
 }
