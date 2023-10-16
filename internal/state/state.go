@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"os"
 	"time"
+
+	"github.com/gofiber/fiber/v2/log"
 )
 
 type Activity struct {
@@ -34,6 +36,8 @@ func (s *State) ActivityPrune() {
 	for _, a := range s.Activity {
 		if (time.Now().Sub(a.Ts)) < fiveMin {
 			tmp = append(tmp, a)
+		} else {
+			log.Debug("Pruned %s", a.Kind)
 		}
 	}
 

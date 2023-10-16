@@ -3,11 +3,12 @@ package game
 import (
 	"errors"
 	"fmt"
-	"github.com/gofiber/fiber/v2/log"
-	"github.com/hackagotchi/hkgi/internal/state"
 	"math"
 	"math/rand"
 	"time"
+
+	"github.com/gofiber/fiber/v2/log"
+	"github.com/hackagotchi/hkgi/internal/state"
 
 	"github.com/hackagotchi/hkgi/database"
 	"github.com/hackagotchi/hkgi/internal/models"
@@ -146,6 +147,7 @@ func RunTick() error {
 	db := database.DB
 
 	for {
+		log.Info("Running game tick...")
 		var users []models.Stead
 		err := db.Select(&users, "SELECT * FROM stead")
 		if err != nil {
@@ -217,6 +219,7 @@ func RunTick() error {
 
 		}
 		state.GlobalState.ActivityPrune()
+		log.Info("Done")
 
 		time.Sleep(500 * time.Millisecond)
 	}
