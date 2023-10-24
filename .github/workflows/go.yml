@@ -23,3 +23,53 @@ jobs:
 
     - name: Build
       run: go build -v ./...
+    
+    - name: Package
+      run: go build && tar czvf hkgi.tar.gz hkgi data migrations
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: hkgi.tar.gz
+        path: hkgi.tar.gz
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    if:
+      contains('refs/heads/master', github.ref)
+    steps:
+      - name: Download latest package
+        uses: actions/download-artifact@v3
+        with:
+          name: hkgi.tar.gz
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" >> ~/.ssh/id_rsa
+          chmod 0600 ~/.ssh/id_rsa
+          cat >>~/.ssh/config <<END
+          Host staging
+            Hostname $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_rsa
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+
+      - name: Deploy with SCP
+        run: scp ./hkgi.tar.gz "staging:$SSH_DIR/hkgi-new.tar.gz"
+        env:
+          SSH_DIR: ${{ secrets.SSH_DIR }}
+
+      - name: Extract tarball on production host
+        run: ssh staging tar xzvf "$SSH_DIR/hkgi-new.tar.gz" -C "$SSH_DIR/hkgi"
+        env:
+          SSH_DIR: ${{ secrets.SSH_DIR }}
+
+      - name: Restart service on production host
+        run: ssh staging /usr/bin/sudo /usr/bin/systemctl restart hkgi
