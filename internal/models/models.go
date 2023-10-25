@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
@@ -28,11 +29,11 @@ type Craft struct {
 }
 
 type Plant struct {
-	Id           int     `json:"id"`
-	Kind         string  `json:"kind"`
-	Xp           int     `json:"xp"`
-	XpMultiplier float32 `json:"xp_multiplier"`
-	NextYield    float32 `json:"tt_yield"`
+	Id           int             `json:"id"`
+	Kind         string          `json:"kind"`
+	Xp           int             `json:"xp"`
+	XpMultiplier float32         `json:"xp_multiplier" db:"xp_multiplier"`
+	NextYield    sql.NullFloat64 `json:"tt_yield" db:"next_yield"`
 }
 
 type Stead struct {

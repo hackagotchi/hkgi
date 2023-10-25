@@ -166,7 +166,7 @@ func RunTick() error {
 			}
 
 			var plants []models.Plant
-			err = db.Select(&plants, "SELECT * FROM plant WHERE stead_owner=$1", u.Id)
+			err = db.Select(&plants, "SELECT id,kind,xp,xp_multiplier,next_yield FROM plant WHERE stead_owner=$1", u.Id)
 			if err != nil {
 				log.Error(err)
 				continue
