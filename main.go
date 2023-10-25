@@ -25,9 +25,10 @@ func main() {
 			code := fiber.StatusInternalServerError
 
 			// Retrieve the custom status code if it's a *fiber.Error
-			var e *fiber.Error
-			if errors.As(err, &e) {
-				code = e.Code
+			var tmp *fiber.Error
+			e := fiber.Error{}
+			if errors.As(err, &tmp) {
+				code = tmp.Code
 			} else {
 				e.Code = code
 			}
