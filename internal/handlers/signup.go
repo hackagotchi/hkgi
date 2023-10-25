@@ -113,8 +113,9 @@ func Signup(c *fiber.Ctx) error {
 		}
 		log.Println("Creating new stead...")
 		inv, _ := json.Marshal(starting_inventory)
+		statuses, _ := json.Marshal(map[string]interface{}{})
 		log.Printf("Username: %s", u.Username)
-		_, err = tx.Exec("INSERT INTO stead (username, password, inventory) VALUES ($1, $2, $3)", u.Username, pw_hash, inv)
+		_, err = tx.Exec("INSERT INTO stead (username, password, inventory, ephemeral_statuses) VALUES ($1, $2, $3, $4)", u.Username, pw_hash, inv, statuses)
 		if err != nil {
 			tx.Rollback()
 			return err
