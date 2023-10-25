@@ -1,5 +1,12 @@
 package models
 
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+	"fmt"
+)
+
 type User struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
@@ -32,8 +39,8 @@ type Stead struct {
 	Id                 int
 	Username           string
 	Password           string
-	Inventory          map[string]interface{}
-	Ephemeral_statuses map[string]interface{}
+	Inventory          JsonValue
+	Ephemeral_statuses JsonValue
 }
 
 type PlantKind string
@@ -44,6 +51,24 @@ const (
 	CYL  PlantKind = "cyl"
 	HVV  PlantKind = "hvv"
 )
+
+type JsonValue map[string]interface{}
+
+func (jval *JsonValue) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case []byte:
+		json.Unmarshal(v, &jval)
+		return nil
+	case string:
+		json.Unmarshal([]byte(v), &jval)
+		return nil
+	default:
+		return errors.New(fmt.Sprintf("Unsupported type: %T", v))
+	}
+}
+func (jval *JsonValue) Value() (driver.Value, error) {
+	return json.Marshal(jval)
+}
 
 //func (s *PlantKind) Scan(value interface{}) error {
 //	asBytes, ok := value.([]byte)
