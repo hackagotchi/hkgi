@@ -28,7 +28,11 @@ func main() {
 			var e *fiber.Error
 			if errors.As(err, &e) {
 				code = e.Code
+			} else {
+				e.Code = code
 			}
+
+			e.Message = err.Error()
 
 			// Send custom error page
 			return c.Status(code).SendString(e.Message)
